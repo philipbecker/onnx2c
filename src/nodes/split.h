@@ -1,6 +1,6 @@
-/* This file is part of onnx2c.
+/* 
  *
- * Split node - split input 'data' tensor into equally sized chunks.
+ * Split node - split input 'data' tensor into sub-tensors along a dimension.
  *
  */
 namespace toC {
@@ -10,6 +10,7 @@ class Split : public Node {
 	Split() {
 		op_name = "Split";
 		output=data=sections=axis=NULL;
+		_axis = 0;
 	}
 
 	// input and output
@@ -25,7 +26,7 @@ class Split : public Node {
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 		for( const auto& a : node.attribute() ) {
-			if( a.name() == "split" )
+			if (a.name() == "split")
 				_sections = parse_attribute_ints(a);
 			else if( a.name() == "axis" )
 				_axis = parse_attribute_int(a);
