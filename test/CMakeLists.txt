@@ -618,6 +618,8 @@ local_node_test(shape_const_out)
 ONNX_backend_node_test(shrink_hard)
 ONNX_backend_node_test(shrink_soft)
 
+ONNX_backend_node_test(split)
+
 ONNX_backend_node_test(slice)
 ONNX_backend_node_test(slice_default_steps)
 ONNX_backend_node_test(slice_neg)
