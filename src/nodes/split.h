@@ -9,20 +9,18 @@ class Split : public Node {
 	public:
 	Split() {
 		op_name = "Split";
-		output=data=sections=axis=NULL;
+		data=sections=axis=NULL;
 		_axis = 0;
 	}
 
-	// input and output
-	// std::vector<Tensor *> output;
-	const Tensor *output;
+	// input
 	const Tensor *data;
 	const Tensor *sections;
 	const Tensor *axis;
 
+	// contents of the input tensors
 	std::vector<int64_t> _sections;
 	int64_t _axis;
-
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 		for( const auto& a : node.attribute() ) {
@@ -50,9 +48,8 @@ class Split : public Node {
 			register_input(axis, "axis");
 		}
 
-		// the output tensor
-		for (int i = 0; i < sections->data_num_elem(); i++)
-		{
+		// create output tensors, one for each split
+		for (int i = 0; i < sections->data_num_elem(); i++)	{
 			Tensor *t = new Tensor;
 			t->data_type = data->data_type;
 			t->data_dim = data->data_dim;
@@ -64,29 +61,31 @@ class Split : public Node {
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
-
 		INDT_1 << "/* Split */" << std::endl;
 		INDT_1 << "/* axis: " << _axis << " */" << std::endl;
 
-		int64_t s = 0;
-		for (int i = 0; i < sections->data_num_elem(); i++) 
-		{
-			INDT_1 << "/* Split " << std::to_string(i) <<  " of size " << std::to_string(sections->get_data_element(i)) << " */" << std::endl;
+		int64_t start = 0;
+		for (int i = 0; i < sections->data_num_elem(); i++) {
+			INDT_1 << "/* Split " << std::to_string(i) <<  " of size "
+			<< std::to_string(sections->get_data_element(i)) << " */" << std::endl;
 			std::string out_idx = std::to_string(i);
 			std::string in_idx;
 
-			for (unsigned d = 0; d < data->rank(); d++)
-			{
+			for (unsigned d = 0; d < data->rank(); d++)	{
 				std::string iv = "i" + std::to_string(d);
 				std::string ov = "o" + std::to_string(d);
+
+				INDT(d + 1) << "for (unsigned " << ov << "=0, ";
 				if (d == _axis) {
-					INDT(d + 1) << "for (unsigned " << iv << "=" << s << ", " << ov << "=0; ";
+					// split this dimension
+					dst << iv << "=" << start << "; ";
 					dst << ov << "<" << sections->get_data_element(i) << "; ";
 				} else {
-					INDT(d + 1) << "for (unsigned " << iv << "=" << 0 << ", " << ov << "=0; ";
+					// fully copy this dimension
+					dst << iv << "=" << 0 << "; ";
 					dst << ov << "<" << data->data_dim[d] << "; ";
 				}
-				
+
 				dst << iv << "++, " << ov << "++) {" << std::endl;
 
 				out_idx += "[" + ov + "]";
@@ -99,7 +98,8 @@ class Split : public Node {
 			for( unsigned r=data->rank(); r>0; r--) {
 				INDT(r) << "}" << std::endl;
 			}
-			s += sections->get_data_element(i);
+			// Update where next split starts
+			start += sections->get_data_element(i);
 		}
 	}
 };
