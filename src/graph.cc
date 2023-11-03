@@ -389,6 +389,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/scatternd.h"
 #include "nodes/shape.h"
 #include "nodes/slice.h"
+#include "nodes/split.h"
 #include "nodes/squeeze.h"
 #include "nodes/softmax.h"
 #include "nodes/transpose.h"
@@ -477,6 +478,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Softplus" )return new Elementwise("Softplus");
 	if( opName == "Softsign" )return new Elementwise("Softsign");
 	if( opName == "Softmax" )return new Softmax;
+	if( opName == "Split" )return new Split;
 	if( opName == "Squeeze" )return new Squeeze;
 	if( opName == "Sqrt" )return new Elementwise("Sqrt");
 	if( opName == "Sub" )return new Elementwise_2("Sub");
